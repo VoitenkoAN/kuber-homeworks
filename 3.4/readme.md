@@ -63,7 +63,8 @@ strategy:
 ```
 
 ### Задание 2. Обновить приложение  
-Создадим деплоймент с nginx 1.19
+Создадим деплоймент с nginx 1.19.  
+Для максимально быстрого обновления мы выставили значение **maxSurge** в **100%**, для сохранения доступности выставили **maxUnavailable: 50%**
 
 <details>
 
@@ -73,18 +74,23 @@ strategy:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: netology-deployment-old
+  name: netology-deployment-back
   labels:
-    app: netology-back-old
+    app: netology-back
 spec:
   replicas: 5
+  revisionHistoryLimit: 10
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 50%
   selector:
     matchLabels:
-      app: netology-back-old
+      app: netology-back
   template:
     metadata:
       labels:
-        app: netology-back-old
+        app: netology-back
     spec:
       containers:
       - name: multitool
