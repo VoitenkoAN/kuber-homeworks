@@ -154,10 +154,16 @@ nginx -version
 ```
 nginx version: nginx/1.20.2
 ```
-Приложение обновлено  
-
-
-
+Приложение обновлено.  
+Проверим историю обновлений командой
+```
+kubectl rollout history deployment/netology-deployment-back
+```
+```
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+```
 
 
 
