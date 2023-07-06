@@ -111,7 +111,7 @@ kubectl get deployments.apps
 ```
 ```
 NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
-netology-deployment-old   1/1     1            1           25s
+netology-deployment-old   5/5     5            5           4m50s
 ```
 
 
