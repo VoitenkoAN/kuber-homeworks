@@ -237,6 +237,23 @@ REVISION  CHANGE-CAUSE
 ```
 Вывод говорит о том, что ревизия, которая шла под номером 2 теперь актуальна и ей был присвоен номер 4
 
+### Задание 3*
+Для начала установим istio
+```
+curl -LO https://github.com/istio/istio/releases/download/1.18.0/istio-1.18.0-linux-amd64.tar.gz
+```
+```
+tar -xf istio-1.18.0-linux-amd64.tar.gz
+```
+```
+cd istio-1.18.0
+```
+```
+sudo cp bin/istioctl /usr/local/bin/
+```
+```
+istioctl install
+```
 
 
 
