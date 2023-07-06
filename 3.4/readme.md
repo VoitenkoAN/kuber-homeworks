@@ -63,4 +63,57 @@ strategy:
 ```
 
 ### Задание 2. Обновить приложение  
+Создадим деплоймент с nginx 1.19
+
+<details>
+
+  <summary><b>deployment-old.yml</b></summary>
+  
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netology-deployment-old
+  labels:
+    app: netology-back-old
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: netology-back-old
+  template:
+    metadata:
+      labels:
+        app: netology-back-old
+    spec:
+      containers:
+      - name: multitool
+        image: wbitt/network-multitool
+        env:
+          - name: HTTP_PORT
+            value: "8080"
+        ports:
+        - containerPort: 8080      
+      - name: nginx119
+        image: nginx:1.19
+        ports:
+        - containerPort: 80
+```
+</details>
+
+<details>
+
+Создадим и проверим
+```
+kubectl apply -f "/home/yc-user/deployment-old.yml"
+```
+```
+kubectl get deployments.apps
+```
+```
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+netology-deployment-old   1/1     1            1           25s
+```
+
+
 
