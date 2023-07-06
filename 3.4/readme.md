@@ -254,6 +254,57 @@ sudo cp bin/istioctl /usr/local/bin/
 ```
 istioctl install --set profile=demo -y
 ```
+Развернём 2 деплоймента
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+          ports:
+            - containerPort: 8080  # Измените порт контейнера здесь
+          command: ["nginx", "-g", "daemon off;"]
+          env:
+            - name: NGINX_PORT  # Добавляем переменную окружения для изменения порта приложения
+              value: "8080"  # Измените на нужный вам порт приложения
+```
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+          ports:
+            - containerPort: 8081  # Измените порт контейнера здесь
+          command: ["nginx", "-g", "daemon off;"]
+          env:
+            - name: NGINX_PORT  # Добавляем переменную окружения для изменения порта приложения
+              value: "8081"  # Измените на нужный вам порт приложения
+```
 
 
 
