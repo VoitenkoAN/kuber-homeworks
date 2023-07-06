@@ -119,6 +119,21 @@ kubectl get deployments.apps
 NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
 netology-deployment-back   5/5     5            5           4m50s
 ```
+Теперь изменим версию nginx 
+```yml
+- name: nginx120
+  image: nginx:1.20
+```
+В отдельном окне можно ввести команду для отображения состояния подов в реальном времени
+```
+kubectl get pod -w
+```
+Применим изменения, тем самым запустив обновление
+```
+kubectl apply -f "/home/yc-user/deployment-rollingupdate.yml.yml"
+```
+
+
 
 
 
