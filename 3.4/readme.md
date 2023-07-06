@@ -254,57 +254,110 @@ sudo cp bin/istioctl /usr/local/bin/
 ```
 istioctl install --set profile=demo -y
 ```
-Развернём 2 деплоймента
-```yml
+Развернём 2 деплоймента с конфиг мапами
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-configmap-1
+data:
+  index.html: |
+    <html>
+      <head>
+        <title>My Nginx Deployment 1</title>
+      </head>
+      <body>
+        <h1>Welcome to Nginx Deployment 1!</h1>
+      </body>
+    </html>
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
+  name: nginx-deployment-1
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: nginx
+      deployment: deployment-1
   template:
     metadata:
       labels:
         app: nginx
+        deployment: deployment-1
     spec:
       containers:
         - name: nginx
           image: nginx
           ports:
-            - containerPort: 8080  # Измените порт контейнера здесь
+            - containerPort: 8080
           command: ["nginx", "-g", "daemon off;"]
           env:
-            - name: NGINX_PORT  # Добавляем переменную окружения для изменения порта приложения
-              value: "8080"  # Измените на нужный вам порт приложения
+            - name: NGINX_PORT
+              value: "8080"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: config-volume
+          configMap:
+            name: nginx-configmap-1
 ```
-```yml
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-configmap-2
+data:
+  index.html: |
+    <html>
+      <head>
+        <title>My Nginx Deployment 2</title>
+      </head>
+      <body>
+        <h1>Welcome to Nginx Deployment 2!</h1>
+      </body>
+    </html>
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
+  name: nginx-deployment-2
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: nginx
+      deployment: deployment-2
   template:
     metadata:
       labels:
         app: nginx
+        deployment: deployment-2
     spec:
       containers:
         - name: nginx
           image: nginx
           ports:
-            - containerPort: 8081  # Измените порт контейнера здесь
+            - containerPort: 8081
           command: ["nginx", "-g", "daemon off;"]
           env:
-            - name: NGINX_PORT  # Добавляем переменную окружения для изменения порта приложения
-              value: "8081"  # Измените на нужный вам порт приложения
+            - name: NGINX_PORT
+              value: "8081"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: config-volume
+          configMap:
+            name: nginx-configmap-2
 ```
+
 
 
 
