@@ -110,7 +110,7 @@ spec:
   
 Создадим и проверим
 ```
-kubectl apply -f "/home/yc-user/deployment-rollingupdate.yml.yml"
+kubectl apply -f "/home/yc-user/deployment-rollingupdate.yml"
 ```
 ```
 kubectl get deployments.apps
@@ -130,8 +130,33 @@ kubectl get pod -w
 ```
 Применим изменения, тем самым запустив обновление
 ```
-kubectl apply -f "/home/yc-user/deployment-rollingupdate.yml.yml"
+kubectl apply -f "/home/yc-user/deployment-rollingupdate.yml"
 ```
+Когда вывод завершится, посмотрим на наши поды
+```
+kubectl get pods
+```
+```
+NAME                                       READY   STATUS    RESTARTS   AGE
+netology-deployment-back-7574fd5b7-5ngwx   2/2     Running   0          84s
+netology-deployment-back-7574fd5b7-82ncn   2/2     Running   0          84s
+netology-deployment-back-7574fd5b7-n6xr4   2/2     Running   0          84s
+netology-deployment-back-7574fd5b7-rtbsm   2/2     Running   0          84s
+netology-deployment-back-7574fd5b7-ztw92   2/2     Running   0          84s
+```
+Подключимся к поду и проверим текущую версию nginx
+```
+kubectl exec -it netology-deployment-back-7574fd5b7-5ngwx -c nginx120 -- /bin/bash
+```
+```
+nginx -version
+```
+```
+nginx version: nginx/1.20.2
+```
+Приложение обновлено  
+
+
 
 
 
