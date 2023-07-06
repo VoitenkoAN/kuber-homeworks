@@ -68,7 +68,7 @@ strategy:
 
 <details>
 
-  <summary><b>deployment-old.yml</b></summary>
+  <summary><b>deployment-rollingupdate.yml</b></summary>
   
 ```yml
 apiVersion: apps/v1
@@ -110,7 +110,7 @@ spec:
   
 Создадим и проверим
 ```
-kubectl apply -f "/home/yc-user/deployment-old.yml"
+kubectl apply -f "/home/yc-user/deployment-rollingupdate.yml.yml"
 ```
 ```
 kubectl get deployments.apps
