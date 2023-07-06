@@ -165,6 +165,78 @@ REVISION  CHANGE-CAUSE
 2         <none>
 ```
 
+Попытаемся обновиться на версию 1.28
+```yml
+      - name: nginx128
+        image: nginx:1.28
+```
+```
+kubectl apply -f "/home/yc-user/deployment-rollingupdate.yml"
+```
+```
+kubectl get pods
+```
+```
+NAME                                        READY   STATUS             RESTARTS   AGE
+netology-deployment-back-6ff467cd6c-6jmkj   1/2     ErrImagePull       0          76s
+netology-deployment-back-6ff467cd6c-94p49   1/2     ImagePullBackOff   0          76s
+netology-deployment-back-6ff467cd6c-bnzbr   1/2     ImagePullBackOff   0          76s
+netology-deployment-back-6ff467cd6c-c7szx   1/2     ErrImagePull       0          76s
+netology-deployment-back-6ff467cd6c-tnb26   1/2     ImagePullBackOff   0          76s
+netology-deployment-back-7574fd5b7-82ncn    2/2     Running            0          25m
+netology-deployment-back-7574fd5b7-n6xr4    2/2     Running            0          25m
+netology-deployment-back-7574fd5b7-ztw92    2/2     Running            0          25m
+```
+100% нашего приложения это 5 реплик.
+Они попытались подняться, но у них не получилось из-за ошибки образа (такого образа не существует).
+Половина старого приложения (округлённая до бОльшего значения, то есть до 3 реплик) осталась функционировать.  
+Посмотрим на количество наших ревизий
+```
+kubectl get rs
+```
+```
+NAME                                  DESIRED   CURRENT   READY   AGE
+netology-deployment-back-6ff467cd6c   5         5         0       7m42s
+netology-deployment-back-7574fd5b7    3         3         3       31m
+netology-deployment-back-7d6db7d77f   0         0         0       36m
+```
+```
+kubectl rollout history deployment/netology-deployment-back
+```
+```
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+3         <none>
+```
+Выполним откат
+```
+kubectl rollout undo deployment/netology-deployment-back
+```
+```
+kubectl get pods
+```
+```
+NAME                                       READY   STATUS    RESTARTS   AGE
+netology-deployment-back-7574fd5b7-82ncn   2/2     Running   0          42m
+netology-deployment-back-7574fd5b7-8c65g   2/2     Running   0          37s
+netology-deployment-back-7574fd5b7-98h75   2/2     Running   0          37s
+netology-deployment-back-7574fd5b7-n6xr4   2/2     Running   0          42m
+netology-deployment-back-7574fd5b7-ztw92   2/2     Running   0          42m
+```
+Мы выполнили откат.  
+Посмотрим на историю ревизий
+```
+kubectl rollout history deployment/netology-deployment-back
+```
+```
+REVISION  CHANGE-CAUSE
+1         <none>
+3         <none>
+4         <none>
+```
+Вывод говорит о том, что ревизия, которая шла под номером 2 теперь актуальна и ей был присвоен номер 4
+
 
 
 
