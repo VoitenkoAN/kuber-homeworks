@@ -252,7 +252,7 @@ cd istio-1.18.0
 sudo cp bin/istioctl /usr/local/bin/
 ```
 ```
-istioctl install
+istioctl install --set profile=demo -y
 ```
 
 
