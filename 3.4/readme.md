@@ -101,10 +101,11 @@ spec:
 ```
 </details>
 
-<details>
+<details>  
 
 
 
+  
 Создадим и проверим
 ```
 kubectl apply -f "/home/yc-user/deployment-old.yml"
