@@ -252,7 +252,7 @@ cd istio-1.18.0
 sudo cp bin/istioctl /usr/local/bin/
 ```
 ```
-istioctl install --set profile=demo -y
+sudo istioctl install --set profile=demo -y
 ```
 Развернём 2 деплоймента с конфиг мапами
 ```
