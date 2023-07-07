@@ -372,5 +372,28 @@ spec:
       port: 8081
       targetPort: 8081
 ```
+Виртуальный сервис
+```
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: nginx-virtual-service
+spec:
+  hosts:
+    - nginx-service
+  gateways:
+    - istio-system/ingressgateway
+  http:
+    - route:
+        - destination:
+            host: nginx-service
+            subset: v1
+          weight: 50
+        - destination:
+            host: nginx-service
+            subset: v2
+          weight: 50
+```
+
 
 
