@@ -287,7 +287,7 @@ spec:
     metadata:
       labels:
         app: nginx
-        deployment: deployment-1
+        version: v1
     spec:
       containers:
         - name: nginx
@@ -338,7 +338,7 @@ spec:
     metadata:
       labels:
         app: nginx
-        deployment: deployment-2
+        version: v2
     spec:
       containers:
         - name: nginx
@@ -357,7 +357,22 @@ spec:
           configMap:
             name: nginx-configmap-2
 ```
-
-
+Сервис
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - protocol: TCP
+      port: 8081
+      targetPort: 8081
+```
 
 
