@@ -282,7 +282,6 @@ spec:
   selector:
     matchLabels:
       app: nginx
-      deployment: deployment-1
   template:
     metadata:
       labels:
@@ -333,7 +332,6 @@ spec:
   selector:
     matchLabels:
       app: nginx
-      deployment: deployment-2
   template:
     metadata:
       labels:
