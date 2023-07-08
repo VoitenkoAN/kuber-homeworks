@@ -254,12 +254,19 @@ sudo cp bin/istioctl /usr/local/bin/
 ```
 sudo istioctl install --set profile=demo -y
 ```
-Развернём 2 деплоймента с конфиг мапами
-```
+
+Создадим 2 деплоймента.  
+Оба они с приложением nginx, но деплойменты разных версий.  
+Так же в манифестах содержатся конфигмапы с разными домашними страницами и с конфигурациями для nginx, что бы слушали разные порты
+<details>
+
+  <summary><b>nginx-deployment-1.yml</b></summary>
+  
+```yml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nginx-configmap-1
+  name: nginx-index-1
 data:
   index.html: |
     <html>
@@ -270,6 +277,53 @@ data:
         <h1>Welcome to Nginx Deployment 1!</h1>
       </body>
     </html>
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config-1
+data:
+  nginx.conf: |
+    user  nginx;
+    worker_processes  auto;
+    
+    error_log  /var/log/nginx/error.log notice;
+    pid        /var/run/nginx.pid;
+    
+    
+    events {
+        worker_connections  1024;
+    }
+    
+    
+    http {
+        include       /etc/nginx/mime.types;
+        default_type  application/octet-stream;
+    
+        log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                          '$status $body_bytes_sent "$http_referer" '
+                          '"$http_user_agent" "$http_x_forwarded_for"';
+    
+        access_log  /var/log/nginx/access.log  main;
+    
+        sendfile        on;
+        #tcp_nopush     on;
+    
+        keepalive_timeout  65;
+    
+        #gzip  on;
+    
+        server {
+            listen                  8080;
+            root                    /usr/share/nginx/html;
+            index                   index.html;
+            server_name             localhost;
+        }
+    
+        include /etc/nginx/conf.d/*.conf;
+    }
 
 ---
 
@@ -294,106 +348,21 @@ spec:
           ports:
             - containerPort: 8080
           command: ["nginx", "-g", "daemon off;"]
-          env:
-            - name: NGINX_PORT
-              value: "8080"
           volumeMounts:
-            - name: config-volume
+            - name: config-volume-index
               mountPath: /usr/share/nginx/html
+            - name: config-volume-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
       volumes:
-        - name: config-volume
+        - name: config-volume-index
           configMap:
-            name: nginx-configmap-1
-```
-```
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-configmap-2
-data:
-  index.html: |
-    <html>
-      <head>
-        <title>My Nginx Deployment 2</title>
-      </head>
-      <body>
-        <h1>Welcome to Nginx Deployment 2!</h1>
-      </body>
-    </html>
-
----
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment-2
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-        version: v2
-    spec:
-      containers:
-        - name: nginx
-          image: nginx
-          ports:
-            - containerPort: 8081
-          command: ["nginx", "-g", "daemon off;"]
-          env:
-            - name: NGINX_PORT
-              value: "8081"
-          volumeMounts:
-            - name: config-volume
-              mountPath: /usr/share/nginx/html
-      volumes:
-        - name: config-volume
+            name: nginx-index-1
+        - name: config-volume-config
           configMap:
-            name: nginx-configmap-2
+            name: nginx-config-1
+            items:
+              - key: nginx.conf
+                path: nginx.conf
 ```
-Сервис
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx-service
-spec:
-  selector:
-    app: nginx
-  ports:
-    - protocol: TCP
-      port: 8080
-      targetPort: 8080
-    - protocol: TCP
-      port: 8081
-      targetPort: 8081
-```
-Виртуальный сервис
-```
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: nginx-virtual-service
-spec:
-  hosts:
-    - nginx-service
-  gateways:
-    - istio-system/ingressgateway
-  http:
-    - route:
-        - destination:
-            host: nginx-service
-            subset: v1
-          weight: 50
-        - destination:
-            host: nginx-service
-            subset: v2
-          weight: 50
-```
-
-
-
+</details>
