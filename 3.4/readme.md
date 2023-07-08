@@ -519,3 +519,74 @@ spec:
       targetPort: 8081
 ```
 </details>
+
+Маршрутизация с помощью istio работает следующим образом:
+**Внешний запрос** -> **Gateway** -> **istio ingress** -> **VirtualService** -> **Service**
+Трафик принимает в себя Gateway, там он разрешается и передаётся в ингресс istio, который мы предварительно установили и оставили с дефолтными настройками.  
+Их нам достаточно для внутренней маршрутизации, если нам нужен доступ из вне нужно было бы донастроить его в режиме LoadBalancer.  
+Так же к трафику могут применяться политики DestinationRules, но в нашем примере нам не нужна тонкая настройка.  
+Ингресс istio передаёт трафик на виртуальный сервис, который в свою очередь маршрутизирует его по нашим сервисам.  
+Для маршрутизации трафика можно описать множесто параметров, но мы просто будем маршрутизировать его 50 на 50.  
+
+Опишем наш GW.  
+В нём мы разрешаем трафик для всех хостов.  
+Так же для внешнего трафика будет слушаться порт 8080.  
+В нашем случае это не обязательно, мы будем обращаться внутри сети сразу к ингрессу istio.  
+<details>
+
+  <summary><b>GW.yml</b></summary>
+  
+```yml
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 8080
+      name: http
+      protocol: http
+    hosts:
+    - "*"
+```
+</details>
+
+Опишем наш виртуальный сервис.  
+Все запросы на корень мы маршрутизируем в 2 наших сервиса.  
+Мы описали вес 90 и 10, это значит что большинство запросов будет отправилено на сервис 1, а меньшая часть на сервис 2.  
+
+<details>
+
+  <summary><b>nginx-virtual-service.yml</b></summary>
+  
+```yml
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: nginx-virtual-service
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - gateway
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: nginx-service-1
+            port:
+              number: 8080
+          weight: 90
+        - destination:
+            host: nginx-service-2
+            port:
+              number: 8081
+          weight: 10
+```
+</details>
+
