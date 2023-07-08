@@ -608,7 +608,7 @@ istio-egressgateway    ClusterIP      10.233.56.195   <none>        80/TCP,443/T
 istio-ingressgateway   LoadBalancer   10.233.29.150   <pending>     15021:32694/TCP,80:31224/TCP,443:31598/TCP,31400:30866/TCP,15443:31032/TCP   39m
 istiod                 ClusterIP      10.233.16.72    <none>        15010/TCP,15012/TCP,443/TCP,15014/TCP                                        44m
 ```
-Обратимся к нему
+Так как мы обращаемся не к GW из вне, а напрямую к ингресу istio изнутри, то будем дёргать его дефолтный порт 80   
 ```
 yc-user@node1:~/istio-1.18.0$ curl 10.233.29.150
 <html>
