@@ -590,3 +590,11 @@ spec:
 ```
 </details>
 
+Применим наши манифесты
+```
+kubectl apply -f nginx-deployment-1.yml
+kubectl apply -f nginx-deployment-2.yml
+kubectl apply -f nginx-service-1.yml
+kubectl apply -f nginx-service-2.yml
+kubectl apply -f nginx-virtual-service.yml
+```
