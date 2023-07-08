@@ -366,3 +366,156 @@ spec:
                 path: nginx.conf
 ```
 </details>
+
+<details>
+
+  <summary><b>nginx-deployment-1.yml</b></summary>
+  
+```yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-index-2
+data:
+  index.html: |
+    <html>
+      <head>
+        <title>My Nginx Deployment 2</title>
+      </head>
+      <body>
+        <h1>Welcome to Nginx Deployment 2!</h1>
+      </body>
+    </html>
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config-2
+data:
+  nginx.conf: |
+    user  nginx;
+    worker_processes  auto;
+    
+    error_log  /var/log/nginx/error.log notice;
+    pid        /var/run/nginx.pid;
+    
+    
+    events {
+        worker_connections  1024;
+    }
+    
+    
+    http {
+        include       /etc/nginx/mime.types;
+        default_type  application/octet-stream;
+    
+        log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                          '$status $body_bytes_sent "$http_referer" '
+                          '"$http_user_agent" "$http_x_forwarded_for"';
+    
+        access_log  /var/log/nginx/access.log  main;
+    
+        sendfile        on;
+        #tcp_nopush     on;
+    
+        keepalive_timeout  65;
+    
+        #gzip  on;
+    
+        server {
+            listen                  8081;
+            root                    /usr/share/nginx/html;
+            index                   index.html;
+            server_name             localhost;
+        }
+    
+        include /etc/nginx/conf.d/*.conf;
+    }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: v2
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+          ports:
+            - containerPort: 8081
+          command: ["nginx", "-g", "daemon off;"]
+          volumeMounts:
+            - name: config-volume-index
+              mountPath: /usr/share/nginx/html
+            - name: config-volume-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+      volumes:
+        - name: config-volume-index
+          configMap:
+            name: nginx-index-2
+        - name: config-volume-config
+          configMap:
+            name: nginx-config-2
+            items:
+              - key: nginx.conf
+                path: nginx.conf
+```
+</details>
+
+
+Создадим сервисы, которые слушают каждый свою версию приложения
+
+<details>
+
+  <summary><b>nginx-service-1.yml</b></summary>
+  
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service-1
+spec:
+  selector:
+    app: nginx
+    version: v1
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+```
+</details>
+
+<details>
+
+  <summary><b>nginx-service-2.yml</b></summary>
+  
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service-2
+spec:
+  selector:
+    app: nginx
+    version: v2
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 8081
+```
+</details>
