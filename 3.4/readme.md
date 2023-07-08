@@ -598,7 +598,10 @@ kubectl apply -f nginx-service-1.yml
 kubectl apply -f nginx-service-2.yml
 kubectl apply -f nginx-virtual-service.yml
 ```
+Узнаем какой IP слушает ингресс istio  
+```
 kubectl get services -n istio-system
+```
 ```
 NAME                   TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                                                                      AGE
 istio-egressgateway    ClusterIP      10.233.56.195   <none>        80/TCP,443/TCP                                                               31m
