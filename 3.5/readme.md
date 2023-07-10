@@ -24,3 +24,28 @@ kubectl apply -f https://raw.githubusercontent.com/netology-code/kuber-homeworks
 1. Домашняя работа оформляется в своём Git-репозитории в файле README.md. Выполненное домашнее задание пришлите ссылкой на .md-файл в вашем репозитории.
 2. Файл README.md должен содержать скриншоты вывода необходимых команд, а также скриншоты результатов.
 3. Репозиторий должен содержать тексты манифестов или ссылки на них в файле README.md.
+
+# Выполнение
+Применяем команду
+```shell
+kubectl apply -f https://raw.githubusercontent.com/netology-code/kuber-homeworks/main/3.5/files/task.yaml
+```
+Получаем ответ
+```
+Error from server (NotFound): error when creating "https://raw.githubusercontent.com/netology-code/kuber-homeworks/main/3.5/files/task.yaml": namespaces "web" not found
+Error from server (NotFound): error when creating "https://raw.githubusercontent.com/netology-code/kuber-homeworks/main/3.5/files/task.yaml": namespaces "data" not found
+Error from server (NotFound): error when creating "https://raw.githubusercontent.com/netology-code/kuber-homeworks/main/3.5/files/task.yaml": namespaces "data" not found
+```
+Действительно в манифесте есть указания на эти неймспейсы, создадим их и попробуем снова
+```
+kubectl create namespace web
+kubectl create namespace data
+```
+```shell
+kubectl apply -f https://raw.githubusercontent.com/netology-code/kuber-homeworks/main/3.5/files/task.yaml
+```
+```
+deployment.apps/web-consumer created
+deployment.apps/auth-db created
+service/auth-db created
+```
