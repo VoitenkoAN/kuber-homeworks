@@ -49,3 +49,53 @@ deployment.apps/web-consumer created
 deployment.apps/auth-db created
 service/auth-db created
 ```
+Посмотрим на логи
+```
+kubectl logs web-consumer-577d47b97d-vzfxw -n web
+curl: (6) Couldn't resolve host 'auth-db'
+curl: (6) Couldn't resolve host 'auth-db'
+```
+Приложение не может подключиться к "auth-db".
+Узнаем IP этого сервиса
+```
+kubectl get service -n data
+NAME      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+auth-db   ClusterIP   10.233.58.165   <none>        80/TCP    14m
+```
+Подключимся к контейнеру с нашим веб приложением
+```
+kubectl exec -n web -it web-consumer-577d47b97d-xg7qd -- /bin/sh
+```
+Проверим
+```
+[ root@web-consumer-577d47b97d-xg7qd:/ ]$ curl auth-db
+curl: (6) Couldn't resolve host 'auth-db'
+[ root@web-consumer-577d47b97d-xg7qd:/ ]$ curl 10.233.58.165
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+```
+Мы смогли подключиться по IP, но не смогли по имени.  
+Это говорит о том, что вызывающий контейнер не знает куда ведёт имя **auth-db**
+В таких случаях нужно прикручивать DNS либо прописать пару "имя - IP" в локальный DNS контейнера, то есть в файл hosts.  
+Но если нам нужно решить проблему подключения прямо сейчас
