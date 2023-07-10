@@ -110,4 +110,17 @@ kubectl -n web edit deployments web-consumer
 ```
 - while true; do curl 10.233.58.165; sleep 5; done
 ```
-
+Снова посмотрим в логи (приведён частичный вывод)
+```
+kubectl logs -n web web-consumer-7c589bc659-mbhk5
+```
+```
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   612  100   612    0     0   101k      0 --:--:-- --:--:-- --:--:--  119k
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+```
+В логах мы видим, что доступ к сервису появился, проблема решена
