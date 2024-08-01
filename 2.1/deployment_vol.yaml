@@ -36,7 +36,7 @@ spec:
           args: ["while true; do echo $(date) >> /logs-dir/log.txt; sleep 5; done"]
           volumeMounts:
             - name: nfsdir
-            mountPath: /logs-dir
+              mountPath: /logs-dir
       volumes:
         - name: nfsdir
           emptyDir: {}
