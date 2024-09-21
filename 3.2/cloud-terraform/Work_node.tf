@@ -30,7 +30,8 @@ resource "yandex_compute_instance_group" "worknode_group" {
     }
 
     metadata = {
-      key_ssh   = "ubuntu:${file("~/.ssh/id_rsa.pub")}"
+      # key_ssh   = "ubuntu:${file("~/.ssh/id_rsa.pub")}"
+      key_ssh   = "ubuntu:${file("~/.ssh/id_ed25519.pub")}"
       #  key_ssh    = "ubuntu:${local.key_ssh}"
     }
   }

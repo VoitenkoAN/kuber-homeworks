@@ -31,7 +31,8 @@ resource "yandex_compute_instance_group" "controlnode" {
 
     metadata = {
       serial-port-enable = var.vm_metadata["serial-port-enable"]
-      key_ssh   = "ubuntu:${file("~/.ssh/id_rsa.pub")}"
+      # key_ssh   = "ubuntu:${file("~/.ssh/id_rsa.pub")}"
+      key_ssh   = "ubuntu:${file("~/.ssh/id_ed25519.pub")}"
       #  key_ssh    = "ubuntu:${local.key_ssh}"
     }
   }

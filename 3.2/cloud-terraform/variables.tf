@@ -27,7 +27,7 @@ variable "subnet_cidr_blocks" {
 }
 
 variable "svc_account_id" {
-  default = "aje3l1um0ompu2tbdh19"
+  default = "ajeh5gpc3h1kthiarqmo"
 }
 
 variable "spcontrolnode" {
@@ -37,7 +37,7 @@ variable "spcontrolnode" {
 
 variable "spworknode_group" {
   type = number
-  default = 2
+  default = 4
 }
 
 variable "vm_name" {

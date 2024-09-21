@@ -1,0 +1,214 @@
+---
+- name: Install 
+  hosts: all
+  become: false
+
+  handlers:
+  - name: restart kubelet
+    service: name=kubelet state=restarted
+    become: true
+
+
+  tasks:
+
+    - name: Install
+      ansible.builtin.apt:
+        pkg:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gpg
+        - pip
+        - git
+        update_cache: true
+      become: true
+
+    - name: Mkdir keyrings # Добаление директории 
+      ansible.builtin.file:
+        path: '/etc/apt/keyrings'
+        state: directory
+        mode: '0755'
+      become: true
+
+    - name: Add gpg key # добавляем ключ
+      apt_key:
+        url: "https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key"
+        state: present
+        keyring: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      become: true
+  
+    - name: Add Example repo # Добавляем репозиторий
+      apt_repository:
+        repo: 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /'
+      become: true
+
+    - name: Install Kubernetes packages. # Установка K8s
+      package:
+        name: 
+          - kubelet
+          - kubernetes-cni
+          - containerd
+        state: present
+      notify: restart kubelet
+      become: true
+
+    - name: Hold kubeadm # отключим обновления
+      ansible.builtin.dpkg_selections:
+        name: '{{ item }}'
+        selection: hold
+      with_items:
+        - kubelet 
+        - containerd
+      become: true
+
+    
+    - name: Restart kubelet # презапускаем kubelet
+      service:
+        name: kubelet
+        state: restarted
+      become: true
+
+    - name: restart containedr # презапускаем containedr
+      service:
+        name: containerd
+        state: restarted
+      become: true
+
+    - name: Remove swapfile from /etc/fstab # В эти двух командах выключаем swap
+      mount:
+        name: "{{ item }}"
+        fstype: swap
+        state: absent
+      with_items:
+        - swap
+        - none
+
+    - name: Disable swap
+      command: swapoff -a
+      when: ansible_swaptotal_mb > 0
+
+    - name: br_netfilter
+      community.general.modprobe:
+        name: br_netfilter
+        state: present
+      become: true
+
+    - sysctl:
+        name: "{{ item }}"
+        value: '1'
+        sysctl_set: yes
+        with_items:
+          - net.ipv4.ip_forward=1
+          - net.bridge.bridge-nf-call-iptables
+          - net.bridge.bridge-nf-call-arptables
+          - net.bridge.bridge-nf-call-ip6tables
+
+    # - name: Get br_netfilter # Включаем forwarding// Заработала таска
+    #   shell: "{{ item }}"
+    #   with_items:
+    #     - modprobe br_netfilter
+    #     - echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf 
+    #     - echo "net.bridge.bridge-nf-call-iptables=1" >> /etc/sysctl.conf
+    #     - echo "net.bridge.bridge-nf-call-arptables=1" >> /etc/sysctl.conf
+    #     - echo "net.bridge.bridge-nf-call-ip6tables=1" >> /etc/sysctl.conf 
+    #     - sysctl -p /etc/sysctl.conf
+    #   become: true
+
+- name: Init K8s
+  hosts: Control_node
+  become: false   
+  tasks:
+
+    - name: Install Kubernetes packages. # Установка K8s
+      package:
+        name: 
+          - kubectl
+          - kubeadm
+        state: present
+      become: true
+
+    - name: Hold kubeadm # отключим обновления
+      ansible.builtin.dpkg_selections:
+        name: '{{ item }}'
+        selection: hold
+      with_items: 
+        - kubeadm
+        - kubectl
+      become: true
+
+
+    - name: Initialize the Kubernetes cluster using kubeadm # инициализируем кластер
+      shell: "sudo kubeadm init --apiserver-advertise-address={{ ansible_default_ipv4.address}} --pod-network-cidr 10.244.0.0/16 --apiserver-cert-extra-sans={{ ansible_host}}"
+      args:
+        chdir: $HOME
+        creates: cluster_initialized.txt
+      become: false
+    
+    - name: Mkdir HOME/.kube/
+      ansible.builtin.file:
+        path: '/home/ubuntu/.kube/'
+        state: directory
+        mode: '0755'
+      become: false
+
+    - name: Open ports 
+      iptables:
+        action: insert
+        rule_num: 1
+        chain: INPUT
+        protocol: tcp
+        destination_port: "{{ item }}"
+        jump: ACCEPT
+      loop:
+        - "6443"
+        - "2379:2380"
+        - "10250:10252"
+      become: true
+
+    - name: Get permission # даем доступ для обычного пользователя
+      shell: "cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config"
+      become: true
+
+    - name: Get permission # даем доступ для обычного пользователя
+      shell: "chown ubuntu:ubuntu /home/ubuntu/.kube/config"
+      become: true
+
+    - name: Install calico pod network # устанавливаем calico pod network
+      become: false
+      shell: "{{ item }}"
+      with_items:
+        - curl https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml -O
+        - kubectl apply -f calico.yaml
+
+    - name: Generate join command # показываем команду с добавлением ноды и записываем ее в переменную
+      #become_user: ubuntu
+      command: kubeadm token create --print-join-command
+      register: join_command
+
+    - name: Copy join command to local file # создаем локальный файл и добавляем туда переменную для присоединения ноды
+      local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"
+
+- name: Init nodes
+  hosts: Work_node
+  become: false   
+  tasks:
+    # tasks file for node_invite
+    - name: Copy the join command to server location # копируем файл с нашей комадной для присоединения ноды на сервер, меняем расширение и добавляем права на исполнение
+      copy: src=join-command dest=/tmp/join-command.sh mode=0777
+
+    - name: Join the node to cluster # запускаем наш файл
+      command: sh /tmp/join-command.sh
+      become: true
+
+    - name: Open ports on Work_node
+      iptables:
+        action: insert
+        rule_num: 1
+        chain: INPUT
+        protocol: tcp
+        destination_port: "{{ item }}"
+        jump: ACCEPT
+      loop:
+        - "10250"
+        - "30000:32767"
+      become: true
